@@ -7,23 +7,20 @@ dotenv.config()
 
 const jwtsecret = process.env.JWTSECRET
 
-const requireLogin = (req, res, next => {
+const requireLogin = async (req, res, next) => {
     const { authorization } = req.headers
     if (!authorization) {
-        return res.status(401).json({ err: "LogIn Required" })
+        return res.status(401).json({ err: "LogIn Required!" })
     }
-    const token = authorization.replace("Bearer ", "")
-    jwt.verify((token, jwtsecret, (err, payload) => {
-        if (err) {
-            res.status(401).json({ err: "LogIn Required" })
-        }
-        const { _id } = payload
-        User.findById(_id)
-            .then(savedUser => {
-                req.user = savedUser
-                next()
-            })
-    }))
-})
+    const token = authorization.replace("Bearer ", "").toString().trim();
+    const decoded = jwt.verify(token, jwtsecret);
+    const { _id } = decoded;
+
+    const user = await User.findById(_id);
+    if (user) {
+        req.user = user;
+        next()
+    }
+}
 
 module.exports = requireLogin;

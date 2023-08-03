@@ -21,6 +21,10 @@ app.use(express.json());
 app.use(require('./routes/auth/signUp'))
 app.use(require('./routes/auth/logIn'))
 
+app.use(require('./routes/post/post'))
+
+app.use(require('./routes/comment/comment'))
+
 app.listen(PORT, () => {
     console.log(`Social Media App listening on port ${PORT}`)
 })
