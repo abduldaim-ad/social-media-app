@@ -33,13 +33,24 @@ router.get('/getuserposts', requireLogin, (req, res) => {
         })
 })
 
-router.get('/getallposts', async (req, res) => {
+router.get('/getallposts', requireLogin, async (req, res) => {
     try {
         const posts = await Post.find()
         return res.status(200).json(posts)
     }
     catch (err) {
         return res.status(500).json({ err: `Error While Getting All Posts` })
+    }
+})
+
+router.get('/getpostdetails', requireLogin, async (req, res) => {
+    try {
+        const { _id } = req.body
+        const postDetails = await Post.findById(_id)
+        return res.status(200).json(postDetails)
+    }
+    catch (err) {
+        return res.status(500).json({ err: `Error While Getting Post Details!` })
     }
 })
 

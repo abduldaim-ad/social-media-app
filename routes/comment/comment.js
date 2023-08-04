@@ -23,7 +23,7 @@ router.post('/postcomment', requireLogin, (req, res) => {
         })
 })
 
-router.get('/getallpostcomments', requireLogin, (req, res) => {
+router.get('/getpostcomments', requireLogin, (req, res) => {
     const { postId } = req.body
     Comment.find({ createdBy: req.user._id, postId: postId })
         .then(allComments => {
@@ -32,6 +32,26 @@ router.get('/getallpostcomments', requireLogin, (req, res) => {
         .catch((err) => {
             return res.status(500).json({ err: `Error While Getting All Comments of Post! ${err}` })
         })
+})
+
+router.get('/getusercomments', requireLogin, async (req, res) => {
+    try {
+        const userComments = await Comment.find({ createdBy: req.user._id })
+        return res.status(200).json(userComments)
+    }
+    catch (err) {
+        return res.status(500).json({ err: `Error While Getting User Comments! ${err}` })
+    }
+})
+
+router.get('/getallcomments', requireLogin, async (req, res) => {
+    try {
+        const allComments = await Comment.find()
+        return res.status(200).json(allComments)
+    }
+    catch (err) {
+        return res.status(500).json({ err: `Error While Getting All Comments! ${err}` })
+    }
 })
 
 router.put('/updatecomment', requireLogin, async (req, res) => {
