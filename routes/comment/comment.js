@@ -34,26 +34,61 @@ router.get('/getallpostcomments', requireLogin, (req, res) => {
         })
 })
 
-router.put('/updatecomment', requireLogin, (req, res) => {
-    const { _id, commentText } = req.body
-    Comment.findByIdAndUpdate(_id, { commentText }, { new: true })
-        .then(() => {
-            return res.status(200).json({ msg: "Comment Updated Successfully!" })
-        })
-        .catch((err) => {
-            return res.status({ err: `Error While Updating Comment! ${err}` })
-        })
+router.put('/updatecomment', requireLogin, async (req, res) => {
+    try {
+        const { _id, commentText, postId } = req.body
+        const updateComment = await Comment.findById(_id)
+        if (updateComment.postId.toString() === postId && updateComment.createdBy._id.toString() === req.user._id.toString()) {
+            try {
+                const commentStatus = await Comment.updateOne({ _id: updateComment._id }, { commentText })
+                return res.status(200).json({ msg: "Comment Updated Successfully!" })
+            }
+            catch (err) {
+                return res.status(500).json({ msg: `Error While Updating Comment! ${err}` })
+            }
+        }
+        else {
+            return res.status(401).json({ err: "Unauthorized User or Post!" })
+        }
+    }
+    catch (err) {
+        return res.status(500).json({ err: `Error While Finding the Comment! ${err}` })
+    }
 })
 
-router.delete('/deletecomment', requireLogin, (req, res) => {
-    const { _id } = req.body
-    Comment.findByIdAndDelete(_id)
-        .then(() => {
-            return res.status(200).json({ msg: "Post Deleted Successfully!" })
-        })
-        .catch((err) => {
-            return res.status(500).json({ err: `Error While Deleting Comment! ${err}` })
-        })
+router.delete('/deletecomment', requireLogin, async (req, res) => {
+    try {
+        const { _id, postId } = req.body
+        const deleteComment = await Comment.findById(_id)
+        try {
+            if (deleteComment.postId.toString() === postId && deleteComment.createdBy._id.toString() === req.user._id.toString()) {
+                try {
+                    const commentStatus = await Comment.deleteOne({ _id: deleteComment._id })
+                    return res.status(200).json({ msg: `Comment Deleted Successfully` })
+                }
+                catch (err) {
+                    return res.status(500).json({ err: `Error While Deleting Comment! ${err}` })
+                }
+            }
+            else {
+                return res.status(401).json({ err: "Unauthorized User or Post!" })
+            }
+        }
+        catch (err) {
+
+        }
+    }
+    catch (err) {
+        return res.status(500).json({ err: `Error While Deleting Comment! ${err}` })
+    }
+
+    // Comment.findByIdAndDelete(_id)
+    //     .then(() => {
+    //         return res.status(200).json({ msg: "Post Deleted Successfully!" })
+    //     })
+    //     .catch((err) => {
+    //         return res.status(500).json({ err: `Error While Deleting Comment! ${err}` })
+    //     })
 })
 
 module.exports = router;

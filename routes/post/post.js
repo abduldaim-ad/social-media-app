@@ -29,33 +29,68 @@ router.get('/getuserposts', requireLogin, (req, res) => {
             return res.json(allPosts)
         })
         .catch(err => {
-            return res.status(500).json({ err: "Error While Getting All Posts!" })
+            return res.status(500).json({ err: "Error While Getting Posts of User!" })
         })
 })
 
-router.delete('/deletepost', requireLogin, (req, res) => {
-    const { _id } = req.body;
-    Post.findByIdAndDelete(_id)
-        .then(() => {
-            return res.status(200).json({ msg: "Post Deleted Successfully!" })
-        })
-        .catch(err => {
-            return res.status(500).json({ err: `Error While Deleting the Post! ${err}` })
-        })
+router.get('/getallposts', async (req, res) => {
+    try {
+        const posts = await Post.find()
+        return res.status(200).json(posts)
+    }
+    catch (err) {
+        return res.status(500).json({ err: `Error While Getting All Posts` })
+    }
 })
 
-router.put('/updatepost', requireLogin, (req, res) => {
-    const { _id, title, desc } = req.body;
-    Post.findByIdAndUpdate(_id, { title, desc }, { new: true })
-        .then(updatedPost => {
-            if (!updatedPost) {
-                return res.status(404).json({ err: "Post Not Found!" })
+router.delete('/deletepost', requireLogin, async (req, res) => {
+    try {
+        const { _id } = req.body;
+        const deletePost = await Post.findById(_id)
+        if (deletePost.createdBy._id.toString() === req.user._id.toString()) {
+            try {
+                const deleteStatus = await Post.deleteOne({ _id: deletePost._id })
+                return res.status(200).json({ msg: "Post Deleted Successfully!" })
             }
-            return res.status(200).json({ msg: "Post Updated Successfully!" })
-        })
-        .catch(err => {
-            return res.status(500).json({ err: `Error While Updating Post! ${err}` })
-        })
+            catch (err) {
+                return res.status(500).json({ err: `Error While Deleting Post! ${err}` })
+            }
+        }
+        else {
+            return res.status(401).json({ err: "Unauthorized User!" })
+        }
+    }
+    catch (err) {
+        return res.status(500).json({ err: `Error While Finding the Post! ${err}` })
+    }
+})
+
+router.put('/updatepost', requireLogin, async (req, res) => {
+    const { _id, title, desc } = req.body;
+    try {
+        const userPost = await Post.findById(_id)
+        if (userPost.createdBy._id.toString() === req.user._id.toString()) {
+            Post.updateOne(
+                { _id: userPost._id },
+                { title, desc }
+            )
+                .then(updatedPost => {
+                    if (!updatedPost) {
+                        return res.status(404).json({ err: "Post Not Found!" })
+                    }
+                    return res.status(200).json({ msg: "Post Updated Successfully!" })
+                })
+                .catch(err => {
+                    return res.status(500).json({ err: `Error While Updating Post! ${err}` })
+                })
+        }
+        else {
+            return res.status(401).json({ err: "Unauthorized User!" })
+        }
+    }
+    catch (err) {
+        return res.status(500).json({ err: `Error While Finding the Post! ${err}` })
+    }
 })
 
 module.exports = router;
