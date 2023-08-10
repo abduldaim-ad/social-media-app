@@ -54,10 +54,12 @@ router.get('/getpostdetails', requireLogin, async (req, res) => {
     }
 })
 
-router.delete('/deletepost', requireLogin, async (req, res) => {
+router.delete('/deletepost/:postId', requireLogin, async (req, res) => {
+    console.log("Getting Here")
     try {
-        const { _id } = req.body;
-        const deletePost = await Post.findById(_id)
+        const { postId } = req.params;
+        console.log("Getting", postId)
+        const deletePost = await Post.findById(postId)
         if (deletePost.createdBy._id.toString() === req.user._id.toString()) {
             try {
                 const deleteStatus = await Post.deleteOne({ _id: deletePost._id })

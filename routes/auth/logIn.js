@@ -9,19 +9,20 @@ const jwtsecret = process.env.JWTSECRET
 
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
+    console.log(password)
     if (!email || !password) {
-        res.status(422).json({ err: "Please Fill All the Fields!" })
+        return res.status(422).json({ err: "Please Fill All the Fields!" })
     }
     const user = await User.findOne({ email });
     if (!user) {
         return res.status(422).json({ err: "Email or Password is Invalid!" })
     }
 
-    const compare = bcrypt.compare(password, user.password);
+    const compare = await bcrypt.compare(password, user.password);
     if (compare) {
         var token = jwt.sign({ _id: user._id }, jwtsecret);
         const { _id, username, email } = user;
-        res.json({ token, user: { _id, username, email } })
+        return res.json({ token, user: { _id, username, email } })
     } else {
         return res.status(422).json({ err: "Email or Password is Invalid!" })
     }

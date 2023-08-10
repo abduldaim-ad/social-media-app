@@ -5,6 +5,7 @@ const User = require('../../models/user');
 const router = express.Router();
 
 router.post('/signup', (req, res) => {
+    console.log(req.body)
     const { username, email, password, cPassword } = req.body;
     if (!username || !email || !password || !cPassword) {
         res.status(422).json({ err: "Please Fill All the Fields" })

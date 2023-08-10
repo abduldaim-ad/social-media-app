@@ -2,6 +2,7 @@ const dotenv = require('dotenv')
 const express = require('express');
 const { default: mongoose } = require('mongoose');
 const app = express()
+var cors = require('cors');
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ mongoose.connect(ATLAS_URI, {
     console.log(`Error while connecting to Social Media App MongoDB Atlas. Error: ${err}`)
 })
 
+app.use(cors());
 app.use(express.json());
 app.use(require('./routes/auth/signUp'))
 app.use(require('./routes/auth/logIn'))
