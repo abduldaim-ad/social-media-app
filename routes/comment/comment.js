@@ -25,10 +25,8 @@ router.post('/postcomment', requireLogin, (req, res) => {
 
 router.get('/getpostcomments/:postId', requireLogin, (req, res) => {
     const { postId } = req.params
-    console.log(postId)
     Comment.find({ postId: postId })
         .then(allComments => {
-            console.log(allComments)
             return res.status(200).json(allComments)
         })
         .catch((err) => {

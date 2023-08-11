@@ -18,7 +18,8 @@ router.post('/createpost', requireLogin, (req, res) => {
         .then(() => {
             return res.status(200).json({ msg: "Post Created Successfully!" })
         })
-        .catch((err) => {
+        .catch(({ err }) => {
+            console.log('errr', err)
             return res.status(500).json({ err: `Error while saving the post! ${err}` })
         })
 })
@@ -54,19 +55,17 @@ router.get('/getpostdetails', requireLogin, async (req, res) => {
     }
 })
 
-router.delete('/deletepost/:postId', requireLogin, async (req, res) => {
-    console.log("Getting Here")
+router.delete('/deletepost/:selectedId', requireLogin, async (req, res) => {
     try {
-        const { postId } = req.params;
-        console.log("Getting", postId)
-        const deletePost = await Post.findById(postId)
+        const { selectedId } = req.params;
+        const deletePost = await Post.findById(selectedId)
         if (deletePost.createdBy._id.toString() === req.user._id.toString()) {
             try {
                 const deleteStatus = await Post.deleteOne({ _id: deletePost._id })
                 return res.status(200).json({ msg: "Post Deleted Successfully!" })
             }
             catch (err) {
-                return res.status(500).json({ err: `Error While Deleting Post! ${err}` })
+                return res.status(500).json({ err: `Error While Deleting Post!` })
             }
         }
         else {
