@@ -11,6 +11,7 @@ router.post('/postcomment', requireLogin, (req, res) => {
     }
     const comment = new Comment({
         commentText,
+        username: req.user.username,
         createdBy: req.user,
         postId
     })
@@ -30,7 +31,7 @@ router.get('/getpostcomments/:postId', requireLogin, (req, res) => {
             return res.status(200).json(allComments)
         })
         .catch((err) => {
-            return res.status(500).json({ err: `Error While Getting All Comments of Post! ${err}` })
+            return res.status(500).json({ err: `Error While Getting All Comments of Post!` })
         })
 })
 
@@ -112,14 +113,6 @@ router.delete('/deletecomment', requireLogin, async (req, res) => {
     catch (err) {
         return res.status(500).json({ err: `Error While Deleting Comment! ${err}` })
     }
-
-    // Comment.findByIdAndDelete(_id)
-    //     .then(() => {
-    //         return res.status(200).json({ msg: "Post Deleted Successfully!" })
-    //     })
-    //     .catch((err) => {
-    //         return res.status(500).json({ err: `Error While Deleting Comment! ${err}` })
-    //     })
 })
 
 module.exports = router;

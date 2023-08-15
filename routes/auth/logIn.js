@@ -3,13 +3,13 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('../../models/user');
+const requireLogin = require('../../middlewares/requireLogin')
 const router = express.Router();
 
 const jwtsecret = process.env.JWTSECRET
 
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    console.log(password)
     if (!email || !password) {
         return res.status(422).json({ err: "Please Fill All the Fields!" })
     }
@@ -27,5 +27,16 @@ router.post('/login', async (req, res) => {
         return res.status(422).json({ err: "Email or Password is Invalid!" })
     }
 });
+
+router.get('/getusername/:postedBy', requireLogin, async (req, res) => {
+    const { postedBy } = req.params;
+    try {
+        const username = await User.findById(postedBy)
+        return res.status(200).json(username)
+    }
+    catch (err) {
+        return res.status(500).json({ err: `Error While Getting Username!` })
+    }
+})
 
 module.exports = router
