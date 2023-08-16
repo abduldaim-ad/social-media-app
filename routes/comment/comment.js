@@ -88,10 +88,10 @@ router.put('/updatecomment', requireLogin, async (req, res) => {
     }
 })
 
-router.delete('/deletecomment', requireLogin, async (req, res) => {
+router.delete('/deletecomment/:commentId/:postId', requireLogin, async (req, res) => {
     try {
-        const { _id, postId } = req.body
-        const deleteComment = await Comment.findById(_id)
+        const { commentId, postId } = req.params
+        const deleteComment = await Comment.findById(commentId)
         try {
             if (deleteComment.postId.toString() === postId && deleteComment.createdBy._id.toString() === req.user._id.toString()) {
                 try {
