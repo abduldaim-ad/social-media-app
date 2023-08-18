@@ -24,8 +24,9 @@ router.post('/createpost', requireLogin, (req, res) => {
         })
 })
 
-router.get('/getuserposts', requireLogin, (req, res) => {
-    Post.find({ createdBy: req.user._id })
+router.get('/getuserposts/:_id', requireLogin, (req, res) => {
+    const _id = req.params;
+    Post.find({ createdBy: _id })
         .then(allPosts => {
             return res.json(allPosts)
         })

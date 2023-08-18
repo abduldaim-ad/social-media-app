@@ -35,7 +35,18 @@ router.get('/getusername/:postedBy', requireLogin, async (req, res) => {
         return res.status(200).json(username)
     }
     catch (err) {
-        return res.status(500).json({ err: `Error While Getting Username!` })
+        return res.status(500).json({ err: "Error While Getting Username!" })
+    }
+})
+
+router.get('/getuserdetails/:_id', requireLogin, async (req, res) => {
+    const { _id } = req.params;
+    try {
+        const user = await User.findById(_id);
+        return res.status(200).json(user);
+    }
+    catch (err) {
+        return res.status(500).json({ err: "Error While Getting User Details!" })
     }
 })
 
