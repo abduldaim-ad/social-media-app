@@ -50,4 +50,62 @@ router.get('/getuserdetails/:_id', requireLogin, async (req, res) => {
     }
 })
 
+router.get('/searchusers/:searchUser', requireLogin, async (req, res) => {
+    const { searchUser } = req.params;
+    if (!searchUser) {
+        return res.status(500).json({ err: "Please Fill All the Fields!" });
+    }
+    try {
+        const user = await User.find({ username: { $regex: searchUser } });
+        return res.status(200).json(user);
+    }
+    catch (err) {
+        return res.status(500).json({ err: "Error While Getting Users!" })
+    }
+})
+
+router.put('/sentrequest', requireLogin, async (req, res) => {
+
+    const { accountId, requestedId } = req.body;
+
+    if (!accountId || !requestedId) {
+        return res.status(422).json({ err: "Id Must Not Be Empty!" })
+    }
+    try {
+        const sentRequest = await User.findByIdAndUpdate(
+            accountId,
+            {
+                "$push": { requestedId }
+            },
+            { "new": true, "upsert": true }
+        );
+        if (sentRequest) {
+            try {
+                const receivedRequest = await User.findByIdAndUpdate(
+                    requestedId,
+                    {
+                        "$push": { receivedId: accountId }
+                    },
+                    { "new": true, "upsert": true }
+                );
+                if (receivedRequest) {
+                    return res.status(200).json({ msg: "Request Sent Successfully!" });
+                }
+                else {
+                    return res.status(422).json({ err: "Request Already Received!" });
+                }
+            }
+            catch (err) {
+                return res.status(500).json({ err: "Error While Sending Request!" });
+            }
+        }
+        else {
+            return res.status(422).json({ err: "Request Already Sent!" });
+        }
+    }
+    catch (err) {
+        return res.status(500).json({ err: "Error While Sending Request!!!" });
+    }
+})
+
 module.exports = router
