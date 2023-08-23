@@ -64,18 +64,23 @@ router.get('/searchusers/:searchUser', requireLogin, async (req, res) => {
     }
 })
 
-router.put('/sentrequest', requireLogin, async (req, res) => {
+router.put('/sendrequest', requireLogin, async (req, res) => {
 
-    const { accountId, requestedId } = req.body;
+    const { accountId, requestedId, receivedUsername } = req.body;
 
-    if (!accountId || !requestedId) {
+    if (!accountId || !requestedId || !receivedUsername) {
         return res.status(422).json({ err: "Id Must Not Be Empty!" })
+    }
+    const check = await User.findById(requestedId);
+    if (check.friendsUsername.includes(receivedUsername)) {
+        console.log("Yes")
+        return res.status(422).json({ err: "Already a Friend!" })
     }
     try {
         const sentRequest = await User.findByIdAndUpdate(
             accountId,
             {
-                "$push": { requestedId }
+                "$push": { requestedId },
             },
             { "new": true, "upsert": true }
         );
@@ -84,7 +89,7 @@ router.put('/sentrequest', requireLogin, async (req, res) => {
                 const receivedRequest = await User.findByIdAndUpdate(
                     requestedId,
                     {
-                        "$push": { receivedId: accountId }
+                        "$push": { receivedId: accountId, receivedUsername }
                     },
                     { "new": true, "upsert": true }
                 );
@@ -105,6 +110,69 @@ router.put('/sentrequest', requireLogin, async (req, res) => {
     }
     catch (err) {
         return res.status(500).json({ err: "Error While Sending Request!!!" });
+    }
+})
+
+router.put('/acceptrequest', requireLogin, async (req, res) => {
+
+    const { accountId, requestedId, accountUsername, receivedUsername } = req.body;
+
+    if (!accountId || !requestedId || !accountUsername || !receivedUsername) {
+        return res.status(422).json({ err: "Please Fill All the Fields!" })
+    }
+    try {
+        const acceptRequest = await User.findByIdAndUpdate(
+            accountId,
+            {
+                "$push": { friendsUsername: receivedUsername },
+                "$pull": { receivedId: requestedId },
+                "$pull": { receivedUsername: receivedUsername }
+            },
+            { "new": true, "upsert": true }
+        );
+        if (acceptRequest) {
+            try {
+                const acceptRequest2 = await User.findByIdAndUpdate(
+                    requestedId,
+                    {
+                        "$push": { friendsUsername: accountUsername },
+                        "$pull": { requestedId: accountId }
+                    },
+                    { "new": true, "upsert": true }
+                );
+                if (acceptRequest2) {
+                    return res.status(200).json({ msg: "Request Accepted Successfully!" });
+                }
+                else {
+                    return res.status(422).json({ err: "Error While Accepting Request!" });
+                }
+            }
+            catch (err) {
+                return res.status(500).json({ err: "Error While Accepting Request!!" });
+            }
+        }
+        else {
+            return res.status(422).json({ err: "Request Already Accepted!" });
+        }
+    }
+    catch (err) {
+        return res.status(500).json({ err: "Error While Accepting Request!!!" });
+    }
+})
+
+router.get('/checkrequest/:requestedId', requireLogin, async (req, res) => {
+    const { requestedId } = req.params;
+    try {
+        const check = await User.find({ requestedId: { $in: [requestedId] } });
+        if (check) {
+            return res.json({ msg: true })
+        }
+        else {
+            return res.json({ msg: false })
+        }
+    }
+    catch (err) {
+        return res.json({ err: "Error While Checking Request!" })
     }
 })
 

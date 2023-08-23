@@ -14,16 +14,18 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     requestedId: {
-        type: Array, default: ''
+        type: Array
     },
     receivedId: {
-        type: Array, default: ''
+        type: Array
     },
-    friendsList: [{
-        friendId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        friendEmail: { type: String, default: '' }
-    }],
-    totalRequest: { type: Number, default: 0 }
+    receivedUsername: {
+        type: Array
+    },
+    friendsUsername: {
+        type: Array
+    },
+    // totalRequest: { type: Number, default: 0 }
 })
 
 const User = mongoose.model('User', userSchema);

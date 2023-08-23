@@ -9,35 +9,46 @@ router.post('/signup', (req, res) => {
     console.log(req.body)
     const { username, email, password, cPassword } = req.body;
     if (!username || !email || !password || !cPassword) {
-        res.status(422).json({ err: "Please Fill All the Fields" })
+        return res.status(422).json({ err: "Please Fill All the Fields" })
     }
     else if (password !== cPassword) {
-        res.status(422).json({ err: "Passwords Did Not Match!" })
+        return res.status(422).json({ err: "Passwords Did Not Match!" })
     }
     User.findOne({ email })
         .then((existingUser) => {
             if (existingUser) {
                 return res.status(422).json({ err: "User Already Registered!" });
             }
-            bcrypt.hash(password, 12)
-                .then(hashedPassword => {
-                    const user = new User({
-                        username,
-                        email,
-                        password: hashedPassword
-                    });
+            User.findOne({ username })
+                .then((existingUsername) => {
+                    if (existingUsername) {
+                        return res.status(422).json({ err: "Username Already Exists!" });
+                    }
+                    else {
+                        bcrypt.hash(password, 12)
+                            .then(hashedPassword => {
+                                const user = new User({
+                                    username,
+                                    email,
+                                    password: hashedPassword
+                                });
 
-                    user.save()
-                        .then(() => {
-                            res.json({ msg: "Signed Up Successfully!" });
-                        })
-                        .catch((err) => {
-                            res.json({ err: `Error While Signing Up ${err}` });
-                        });
+                                user.save()
+                                    .then(() => {
+                                        return res.json({ msg: "Signed Up Successfully!" });
+                                    })
+                                    .catch((err) => {
+                                        return res.json({ err: `Error While Signing Up ${err}` });
+                                    });
+                            })
+                    }
                 })
+                .catch((err) => {
+                    return res.json({ err: `Error While Signing Up ${err}` });
+                });
         })
         .catch((err) => {
-            res.json({ err: `Error While Signing Up ${err}` });
+            return res.json({ err: `Error While Signing Up ${err}` });
         });
 });
 
@@ -46,18 +57,29 @@ router.put('/updateusername', requireLogin, async (req, res) => {
     if (!username) {
         return res.status(422).json({ err: "Please Fill All the Fields!" })
     }
-    const user = await User.findById(_id);
-    if (user) {
-        const update = await User.updateOne({ _id: user._id }, { username })
-        if (update) {
-            return res.status(200).json({ msg: "Username Updated Successfully!" })
+    try {
+        const exists = await User.findOne({ username })
+        if (exists) {
+            return res.status(422).json({ err: "Username Already Exists!" });
         }
         else {
-            return res.status(500).json({ err: "Error While Updating Username!" })
+            const user = await User.findById(_id);
+            if (user) {
+                const update = await User.updateOne({ _id: user._id }, { username })
+                if (update) {
+                    return res.status(200).json({ msg: "Username Updated Successfully!" })
+                }
+                else {
+                    return res.status(500).json({ err: "Error While Updating Username!" })
+                }
+            }
+            else {
+                return res.status(404).json({ err: "User Not Found!" })
+            }
         }
     }
-    else {
-        return res.status(404).json({ err: "User Not Found!" })
+    catch (err) {
+        return res.status(500).json({ err: "Error While Updating Username!" });
     }
 })
 
