@@ -5,13 +5,14 @@ const router = express.Router()
 const requireLogin = require('../../middlewares/requireLogin')
 
 router.post('/createpost', requireLogin, (req, res) => {
-    const { title, desc } = req.body;
-    if (!title || !desc) {
+    const { title, desc, photo } = req.body;
+    if (!title || !desc || !photo) {
         return res.status(422).json({ err: "Please Fill All the Fields!" })
     }
     const post = new Post({
         title,
         desc,
+        photo,
         createdBy: req.user
     })
     post.save()
@@ -19,7 +20,6 @@ router.post('/createpost', requireLogin, (req, res) => {
             return res.status(200).json({ msg: "Post Created Successfully!" })
         })
         .catch(({ err }) => {
-            console.log('errr', err)
             return res.status(500).json({ err: `Error while saving the post! ${err}` })
         })
 })
@@ -79,13 +79,13 @@ router.delete('/deletepost/:selectedId', requireLogin, async (req, res) => {
 })
 
 router.put('/updatepost', requireLogin, async (req, res) => {
-    const { _id, title, desc } = req.body;
+    const { _id, title, desc, photo } = req.body;
     try {
         const userPost = await Post.findById(_id)
         if (userPost.createdBy._id.toString() === req.user._id.toString()) {
             Post.updateOne(
                 { _id: userPost._id },
-                { title, desc }
+                { title, desc, photo }
             )
                 .then(updatedPost => {
                     if (!updatedPost) {

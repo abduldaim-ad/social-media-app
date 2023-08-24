@@ -10,6 +10,10 @@ const postSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    photo: {
+        type: String,
+        required: true
+    },
     createdBy: {
         type: ObjectId,
         ref: "User"

@@ -73,7 +73,6 @@ router.put('/sendrequest', requireLogin, async (req, res) => {
     }
     const check = await User.findById(requestedId);
     if (check.friendsUsername.includes(receivedUsername)) {
-        console.log("Yes")
         return res.status(422).json({ err: "Already a Friend!" })
     }
     try {
