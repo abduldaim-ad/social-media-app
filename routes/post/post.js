@@ -4,25 +4,78 @@ const Post = require('../../models/post')
 const router = express.Router()
 const requireLogin = require('../../middlewares/requireLogin')
 
-router.post('/createpost', requireLogin, (req, res) => {
-    const { title, desc, photo } = req.body;
-    if (!title || !desc || !photo) {
-        return res.status(422).json({ err: "Please Fill All the Fields!" })
+const cloudinary = require("cloudinary").v2;
+const Multer = require("multer");
+
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET,
+});
+
+const storage = new Multer.memoryStorage();
+const upload = Multer({
+    storage,
+});
+
+async function handleUpload(file) {
+    const res = await cloudinary.uploader.upload(file, {
+        resource_type: "auto",
+    });
+    return res;
+}
+
+router.post("/createpost", upload.single("my_file"), async (req, res) => {
+    try {
+        const b64 = Buffer.from(req.file.buffer).toString("base64");
+        let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+        const cldRes = await handleUpload(dataURI);
+        console.log("IsUser", req.user);
+        const { title, desc } = req.body;
+        if (!title || !desc) {
+            return res.status(422).json({ err: "Please Fill All the Fields!" })
+        }
+        const post = new Post({
+            title,
+            desc,
+            photo: cldRes.secure_url,
+            createdBy: req.user
+        })
+        post.save()
+            .then(() => {
+                return res.status(200).json({ msg: "Post Created Successfully!" })
+            })
+            .catch(({ err }) => {
+                return res.status(500).json({ err: `Error while saving the post! ${err}` })
+            })
+
+    } catch (error) {
+        console.log(error);
+        res.send({
+            message: error.message,
+        });
     }
-    const post = new Post({
-        title,
-        desc,
-        photo,
-        createdBy: req.user
-    })
-    post.save()
-        .then(() => {
-            return res.status(200).json({ msg: "Post Created Successfully!" })
-        })
-        .catch(({ err }) => {
-            return res.status(500).json({ err: `Error while saving the post! ${err}` })
-        })
-})
+});
+
+// router.post('/createpost', requireLogin, (req, res) => {
+//     const { title, desc, photo } = req.body;
+//     if (!title || !desc || !photo) {
+//         return res.status(422).json({ err: "Please Fill All the Fields!" })
+//     }
+//     const post = new Post({
+//         title,
+//         desc,
+//         photo,
+//         createdBy: req.user
+//     })
+//     post.save()
+//         .then(() => {
+//             return res.status(200).json({ msg: "Post Created Successfully!" })
+//         })
+//         .catch(({ err }) => {
+//             return res.status(500).json({ err: `Error while saving the post! ${err}` })
+//         })
+// })
 
 router.get('/getuserposts/:_id', requireLogin, (req, res) => {
     const _id = req.params;
