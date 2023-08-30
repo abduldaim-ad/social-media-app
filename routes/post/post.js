@@ -31,7 +31,7 @@ router.post("/createpost", upload.single("my_file"), async (req, res) => {
         let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
         const cldRes = await handleUpload(dataURI);
         console.log("IsUser", req.user);
-        const { title, desc } = req.body;
+        const { title, desc, userId } = req.body;
         if (!title || !desc) {
             return res.status(422).json({ err: "Please Fill All the Fields!" })
         }
@@ -39,7 +39,7 @@ router.post("/createpost", upload.single("my_file"), async (req, res) => {
             title,
             desc,
             photo: cldRes.secure_url,
-            createdBy: req.user
+            createdBy: userId
         })
         post.save()
             .then(() => {
@@ -131,14 +131,23 @@ router.delete('/deletepost/:selectedId', requireLogin, async (req, res) => {
     }
 })
 
-router.put('/updatepost', requireLogin, async (req, res) => {
-    const { _id, title, desc, photo } = req.body;
+router.put('/updatepost', upload.single("my_file"), async (req, res) => {
+
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+    let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+    const cldRes = await handleUpload(dataURI);
+
+    const { _id, userId, title, desc } = req.body;
     try {
         const userPost = await Post.findById(_id)
-        if (userPost.createdBy._id.toString() === req.user._id.toString()) {
+        if (userPost.createdBy._id.toString() === userId.toString()) {
             Post.updateOne(
                 { _id: userPost._id },
-                { title, desc, photo }
+                {
+                    title,
+                    desc,
+                    photo: cldRes.secure_url
+                }
             )
                 .then(updatedPost => {
                     if (!updatedPost) {
