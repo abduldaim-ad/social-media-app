@@ -112,6 +112,50 @@ router.put('/sendrequest', requireLogin, async (req, res) => {
     }
 })
 
+router.put('/cancelrequest', requireLogin, async (req, res) => {
+
+    const { accountId, requestedId, receivedUsername } = req.body;
+
+    if (!accountId || !requestedId || !receivedUsername) {
+        return res.status(422).json({ err: "Please Fill All the Fields!" })
+    }
+    try {
+        const cancelRequest = await User.findByIdAndUpdate(
+            accountId,
+            {
+                "$pull": { requestedId }
+            },
+            { "new": true, "upsert": true }
+        );
+        if (cancelRequest) {
+            try {
+                const cancelRequest2 = await User.findByIdAndUpdate(
+                    requestedId,
+                    {
+                        "$pull": { receivedId: accountId, receivedUsername }
+                    },
+                    { "new": true, "upsert": true }
+                );
+                if (cancelRequest2) {
+                    return res.status(200).json({ msg: "Request Cancelled Successfully!" });
+                }
+                else {
+                    return res.status(422).json({ err: "Error While Canceling Request!" });
+                }
+            }
+            catch (err) {
+                return res.status(500).json({ err: "Error While Canceling Request!!" });
+            }
+        }
+        else {
+            return res.status(422).json({ err: "Request Already Cancelled!" });
+        }
+    }
+    catch (err) {
+        return res.status(500).json({ err: "Error While Canceling Request!!!" });
+    }
+})
+
 router.put('/acceptrequest', requireLogin, async (req, res) => {
 
     const { accountId, requestedId, accountUsername, receivedUsername } = req.body;
