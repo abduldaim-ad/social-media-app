@@ -27,7 +27,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: 'https://fbclone-sage.vercel.app',
+        origin: 'https://facebook-fbclone.vercel.app/',
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true
     }
