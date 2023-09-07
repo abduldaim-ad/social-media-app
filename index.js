@@ -27,7 +27,11 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: 'https://facebook-fbclone.vercel.app/',
+        origin: (process.env.NODE_ENV === "production")
+            ?
+            'https://facebook-fbclone.vercel.app/'
+            :
+            'http://localhost:5000/',
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true
     }
