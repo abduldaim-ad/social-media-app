@@ -68,7 +68,7 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', async () => {
         console.log('A user disconnected');
-        // Remove disconnected user from users data structure
+        //Remove disconnected user from users data structure
         const update = await User.findOneAndUpdate({ socketId: socket.id }, { socketId: "" });
     });
 });
